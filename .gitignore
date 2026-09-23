@@ -34,4 +34,5 @@ coverage/
 # harmless in terms of correctness, but it's exactly the kind of binary
 # that doesn't belong in git history — regenerating it is free and fast.
 public/models/*.task
+public/models/whisper-base/
 UNDERSTANDING.md
