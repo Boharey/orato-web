@@ -1,4 +1,4 @@
-import { pipeline, env, type AutomaticSpeechRecognitionPipeline } from "@huggingface/transformers";
+import { pipeline, type AutomaticSpeechRecognitionPipeline } from "@huggingface/transformers";
 import type { TranscriptionResult, WordTimestamp } from "@/types/metrics";
 
 const MODEL_ID = "onnx-community/whisper-base";
@@ -19,14 +19,7 @@ async function detectWebGPU(): Promise<boolean> {
   }
 }
 
-function configureLocalModelFallback(): void {
-  env.allowLocalModels = true;
-  env.localModelPath = "/models/";
-  env.allowRemoteModels = true;
-}
-
 async function loadPipeline(onProgress?: ProgressCallback) {
-  configureLocalModelFallback();
   const hasWebGPU = await detectWebGPU();
   return pipeline("automatic-speech-recognition", MODEL_ID, {
     device: hasWebGPU ? "webgpu" : "wasm",
@@ -97,3 +90,5 @@ export async function transcribeAudio(
     durationSec,
   };
 }
+
+
