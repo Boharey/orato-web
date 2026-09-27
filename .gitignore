@@ -35,5 +35,4 @@ coverage/
 # that doesn't belong in git history — regenerating it is free and fast.
 public/models/*.task
 # public/models/whisper-base/
-public/models/onnx-community/
 UNDERSTANDING.md
