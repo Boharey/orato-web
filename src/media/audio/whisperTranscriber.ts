@@ -21,10 +21,23 @@ async function detectWebGPU(): Promise<boolean> {
 
 async function loadPipeline(onProgress?: ProgressCallback) {
   const hasWebGPU = await detectWebGPU();
-  return pipeline("automatic-speech-recognition", MODEL_ID, {
-    device: hasWebGPU ? "webgpu" : "wasm",
-    progress_callback: onProgress,
-  });
+  const create = () =>
+    pipeline("automatic-speech-recognition", MODEL_ID, {
+      device: hasWebGPU ? "webgpu" : "wasm",
+      progress_callback: onProgress,
+    });
+
+  try {
+    return await create();
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    if (/protobuf|failed to load model/i.test(msg) && "caches" in window) {
+      console.warn("[whisper] Corrupt cached model detected — clearing cache and retrying once.");
+      await caches.delete("transformers-cache");
+      return await create();
+    }
+    throw err;
+  }
 }
 
 export async function getTranscriber(
@@ -33,10 +46,15 @@ export async function getTranscriber(
   if (transcriberInstance) return transcriberInstance;
   if (loadingPromise) return loadingPromise;
 
-  loadingPromise = loadPipeline(onProgress).then((p) => {
-    transcriberInstance = p;
-    return p;
-  });
+  loadingPromise = loadPipeline(onProgress)
+    .then((p) => {
+      transcriberInstance = p;
+      return p;
+    })
+    .catch((err) => {
+      loadingPromise = null;
+      throw err;
+    });
 
   return loadingPromise;
 }
